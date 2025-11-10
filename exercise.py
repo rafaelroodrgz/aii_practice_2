@@ -28,19 +28,20 @@ def read_data():
         
         news_divs = container.find_all("div", class_="meta")
         for nd in news_divs:
-            category = nd.find("div", class_="meta-category").text.strip()
-            parsed_category = parse_category_name(category)
+            
+            not_parsed_category = nd.find("div", class_="meta-category").text.strip()
+            category = parse_category_name(not_parsed_category)
             
             url_div = nd.find("a", href=True)
-            full_url = 'https://www.sensacine.com' + url_div['href']
+            link = 'https://www.sensacine.com' + url_div['href']
             
             description = url_div.text.strip()
             
             date_div = nd.find("div", class_="meta-date")
             date_without_weekday = delete_weekday_from_date(date_div.text.strip())
-            parsed_date = parse_date(date_without_weekday)
+            date = parse_date(date_without_weekday)
           
-            uris.append((parsed_category, full_url, description, parsed_date))
+            uris.append((category, link, description, date))
         return uris
 
     def parse_category_name (category_name):
@@ -64,14 +65,15 @@ def read_data():
         modified_date = f"{slices[0]} {months[slices[1]]} {slices[2]}"
         return datetime.strptime(modified_date, '%d %m %Y').strftime('%d%m%Y')
 
-
     def obtain_news_from_uris(news_uris):
         news = list()
-        for n_uri, category, description, publish_date  in news_uris:
-            raw_data = urllib.request.urlopen(n_uri).read().decode('UTF-8')
-            soup = BeautifulSoup(raw_data, 'lxml')
-            title = soup.find('div', class_='titlebar-title titlebar-title-lg').text.strip() if soup.find('div', class_='titlebar-title titlebar-title-lg') else 'Unknown'
-            new = (category, title, n_uri, description, publish_date)
+        for category, link, description, date in news_uris:
+            req=urllib.request.Request(link,         
+            headers={'User-Agent': 'Mozilla/5.0'}) 
+            f = urllib.request.urlopen(req) 
+            s = BeautifulSoup(f, 'lxml')
+            title = s.find('div', class_='titlebar-title titlebar-title-lg').text.strip() if s.find('div', class_='titlebar-title titlebar-title-lg') else 'Unknown'
+            new = (category, title, link, description, date)
             print(new)
             news.append(new)
         return news
