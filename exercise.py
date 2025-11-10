@@ -269,24 +269,33 @@ def delete_by_description():
     en.pack(side=LEFT)
 
 def title_and_date():
-    def list_films_by_date_and_title(event):
+    def parse_date(date):
+        new_date = '' + date[4:] + date[2:4] + date[:2]
+        return new_date
+
+    def list_films_by_date_and_title():
         ix=open_dir('Index')
         with ix.searcher() as searcher:
-            myquery = QueryParser("title", ix.schema).parse('date:['+ str(entry_date.get()) +' TO ' + str(entry_date.get()) + '] '+ str(entry_title.get()))
-            results = searcher.search(myquery, limit=5)
-            print_list(results)
+            s = re.compile('\d{8}').match(str(entry_date.get()))
+            if s:
+                myquery = QueryParser("title", ix.schema).parse('date:['+ parse_date(str(entry_date.get())) +' TO ' + parse_date(str(entry_date.get())) + '] '+ str(entry_title.get()))
+                results = searcher.search(myquery, limit=5)
+                print_list(results)
+            else:
+                messagebox.showerror("ERROR", "formato de fecha incorrecto DDMMYYY")
 
     v = Toplevel()
     label = Label(v, text="Search for films with that title and publish date (DDMMYYYY): ")
     label.pack(side=LEFT)
     
     entry_title = Entry(v)
-    entry_title.bind("<Return>", list_films_by_date_and_title)
     entry_title.pack(side=LEFT)
 
     entry_date = Entry(v)
-    entry_date.bind("<Return>", list_films_by_date_and_title)
     entry_date.pack(side=LEFT)
+
+    b =Button(v, text="Buscar", command=list_films_by_date_and_title)
+    b.pack(side=LEFT)
 
 
 def main_window():
