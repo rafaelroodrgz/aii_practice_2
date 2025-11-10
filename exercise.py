@@ -126,7 +126,7 @@ def print_list(cursor):
         lb.insert(END,"    Category: " + row['category'])
         lb.insert(END,"    Title: "+ row['title'])
         lb.insert(END,"    Link: "+ row['link'])
-        lb.insert(END,"    Date: "+ str(row['date']))
+        lb.insert(END,"    Date: "+ row['date'].strftime('%d/%m/%Y'))
         lb.insert(END,"\n\n")
     lb.pack(side=LEFT,fill=BOTH)
     sc.config(command = lb.yview)
