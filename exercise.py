@@ -15,14 +15,38 @@ if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
 getattr(ssl, '_create_unverified_context', None)):
     ssl._create_default_https_context = ssl._create_unverified_context
 
-def main_window():    
+
+def read_data():
+    def obtain_recipes_uris():
+        pass
+
+    def obtain_recipes_from_uris(recipes_uris):
+        pass
+
+    recipes_uris = obtain_recipes_uris()
+    data = obtain_recipes_from_uris(recipes_uris)
+    return data
+
+def load():
+    data = read_data()
+    pass
+
+def title_or_introduction():
+    pass
+
+def date():
+    pass
+
+def features_and_title():
+    pass
+
+def main_window():
     root = Tk()
     menu = Menu(root)
 
     # DATA
     datamenu = Menu(menu, tearoff=0)
     datamenu.add_command(label="Load", command=load)
-    datamenu.add_command(label="List", command=list_all)
     datamenu.add_command(label="Exit", command=root.quit)
     menu.add_cascade(label="Data", menu=datamenu)
 
