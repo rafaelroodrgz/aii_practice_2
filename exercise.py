@@ -5,8 +5,8 @@ from tkinter import messagebox
 import re, os, shutil
 from datetime import datetime
 from whoosh.index import create_in,open_dir
-from whoosh.fields import Schema, TEXT, DATETIME, ID
-from whoosh.qparser import QueryParser
+from whoosh.fields import Schema, TEXT, DATETIME, ID, KEYWORD
+from whoosh.qparser import QueryParser, MultifieldParser
 from datetime import datetime
 from whoosh import qparser, index, query
 import locale
@@ -29,8 +29,28 @@ def read_data():
     return data
 
 def load():
-    data = read_data()
-    pass
+    schem = Schema(category=ID(stored=True), 
+                   title=TEXT(stored=True), 
+                   link=ID(stored=True), 
+                   description=TEXT,
+                   date=DATETIME(stored=True))
+    if os.path.exists("Index"):
+        shutil.rmtree("Index")
+    os.mkdir("Index")
+    
+    ix = create_in("Index", schema=schem)
+    writer = ix.writer()
+    i=0
+    list=read_data()
+    for j in list:
+        writer.add_document(category=str(j[0]), 
+                            title=int(j[1]), 
+                            link=str(j[2]), 
+                            description=j[3], 
+                            date=str(j[4]))    
+        i+=1
+    writer.commit()
+    messagebox.showinfo("End of index", "Indexed "+str(i)+ " news")   
 
 def list_all():
         ix=open_dir("Index")
@@ -38,11 +58,37 @@ def list_all():
             results = searcher.search(query.Every(),limit=None)
             print_list(results)
 
-def print_list():
-    pass
+def print_list(cursor):
+    v = Toplevel()
+    v.title("FILM NEWS")
+    sc = Scrollbar(v)
+    sc.pack(side=RIGHT, fill=Y)
+    lb = Listbox(v, width = 150, yscrollcommand=sc.set)
+    for row in cursor:
+        lb.insert(END,row['title'])
+        lb.insert(END,"    Description: "+ row['description'])
+        lb.insert(END,"    Link: "+ row['link'])
+        lb.insert(END,"    Date: "+ row['date'])
+        lb.insert(END,"\n\n")
+    lb.pack(side=LEFT,fill=BOTH)
+    sc.config(command = lb.yview)
 
 def description():
-    pass
+    def show_list(event):
+        ix=open_dir("Index")   
+        with ix.searcher() as searcher:
+            query = MultifieldParser(["description"], ix.schema).parse('"'+ str(en.get()) + '"')
+            results = searcher.search(query,limit=10)
+            print_list(results)
+    
+    v = Toplevel()
+    v.title("Search by description")
+        
+    l1 = Label(v, text="Enter a phrase")
+    l1.pack(side=LEFT)
+    en = Entry(v, width=75)
+    en.bind("<Return>", show_list)
+    en.pack(side=LEFT)
 
 def category_and_title():
     pass
