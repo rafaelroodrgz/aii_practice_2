@@ -100,7 +100,32 @@ def description():
     en.pack(side=LEFT)
 
 def category_and_title():
-    pass
+    def mostrar_lista():    
+        with ix.searcher() as searcher:
+            entrada = '"'+str(en.get())+'"'
+            query = QueryParser("title", ix.schema).parse('category:'+ entrada +' '+str(en1.get()))
+            results = searcher.search(query,limit=10)
+            print_list(results)
+    
+    v = Toplevel()
+    v.title("Search by Category and Title")
+    l = Label(v, text="Choose a category:")
+    l.pack(side=LEFT)
+    
+    ix=open_dir("Index")      
+    with ix.searcher() as searcher:
+        lista_caracteristicas = [i.decode('utf-8') for i in searcher.lexicon('category')]
+    
+    en = Spinbox(v, values=lista_caracteristicas, state="readonly")
+    en.pack(side=LEFT)
+    
+    l1 = Label(v, text="Write title words:")
+    l1.pack(side=LEFT)
+    en1 = Entry(v, width=75)
+    en1.pack(side=LEFT)
+    
+    b =Button(v, text="Search", command=mostrar_lista)
+    b.pack(side=LEFT)
 
 def title_or_description():
     pass
