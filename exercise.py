@@ -20,13 +20,16 @@ getattr(ssl, '_create_unverified_context', None)):
 def read_data():
     def obtain_news_uris():
         uris = []
-        req=urllib.request.Request("https://www.sensacine.com/noticias/",         
-        headers={'User-Agent': 'Mozilla/5.0'}) 
-        f = urllib.request.urlopen(req) 
-        s = BeautifulSoup(f, 'lxml')
-        container = s.find("div", class_="gd-col-left")
+        news_divs = []
+        for i in range(1,5):
+            req=urllib.request.Request(f"https://www.sensacine.com/noticias/?page={i}",         
+            headers={'User-Agent': 'Mozilla/5.0'}) 
+            f = urllib.request.urlopen(req) 
+            s = BeautifulSoup(f, 'lxml')
+            container = s.find("div", class_="gd-col-left")
+            news_divs_page = container.find_all("div", class_="meta")
+            news_divs.extend(news_divs_page)
         
-        news_divs = container.find_all("div", class_="meta")
         for nd in news_divs:
             
             not_parsed_category = nd.find("div", class_="meta-category").text.strip()
@@ -63,7 +66,9 @@ def read_data():
         slices = date.lower().split()
         slices = [slices[-5], slices[-3], slices[-1]]
         modified_date = f"{slices[0]} {months[slices[1]]} {slices[2]}"
-        return datetime.strptime(modified_date, '%d %m %Y').strftime('%d%m%Y')
+        # return datetime.strptime(modified_date, '%d %m %Y').strftime('%d%m%Y')
+        return datetime.strptime(modified_date, '%d %m %Y')
+
 
     def obtain_news_from_uris(news_uris):
         news = list()
@@ -74,7 +79,7 @@ def read_data():
             s = BeautifulSoup(f, 'lxml')
             title = s.find('div', class_='titlebar-title titlebar-title-lg').text.strip() if s.find('div', class_='titlebar-title titlebar-title-lg') else 'Unknown'
             new = (category, title, link, description, date)
-            print(new)
+            # print(new)
             news.append(new)
         return news
 
@@ -98,10 +103,10 @@ def load():
     list=read_data()
     for j in list:
         writer.add_document(category=str(j[0]), 
-                            title=int(j[1]), 
+                            title=str(j[1]), 
                             link=str(j[2]), 
-                            description=j[3], 
-                            date=str(j[4]))    
+                            description=str(j[3]), 
+                            date=j[4])   
         i+=1
     writer.commit()
     messagebox.showinfo("End of index", "Indexed "+str(i)+ " news")   
@@ -242,5 +247,5 @@ def main_window():
     root.mainloop()
 
 if __name__ == '__main__':
-    # main_window()
-    read_data()
+    main_window()
+    # load()
