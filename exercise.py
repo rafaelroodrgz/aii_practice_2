@@ -22,7 +22,16 @@ def read_data():
         pass
 
     def obtain_news_from_uris(news_uris):
-        pass
+        news = list()
+        for n_uri, category, publish_date  in news_uris:
+            raw_data = urllib.request.urlopen(n_uri).read().decode('UTF-8')
+            soup = BeautifulSoup(raw_data, 'lxml')
+            title = soup.find('div', class_='titlebar-title titlebar-title-lg').text.strip() if soup.find('div', class_='titlebar-title titlebar-title-lg') else 'Unknown'
+            description = soup.find('p', class_='article-lead').text.strip() if soup.find('p', class_='article-lead') else 'Unknown'
+            new = (category, title, n_uri, description, publish_date)
+            print(new)
+            news.append(new)
+        return news
 
     news_uris = obtain_news_uris()
     data = obtain_news_from_uris(news_uris)
