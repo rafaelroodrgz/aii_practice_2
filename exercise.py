@@ -8,6 +8,7 @@ from whoosh.index import create_in,open_dir
 from whoosh.fields import Schema, TEXT, DATETIME, ID
 from whoosh.qparser import QueryParser
 from datetime import datetime
+from whoosh import qparser, index, query
 import locale
 
 import os, ssl
@@ -40,14 +41,33 @@ def load():
     data = read_data()
     pass
 
-def title_or_introduction():
+def list_all():
+        ix=open_dir("Index")
+        with ix.searcher() as searcher:
+            results = searcher.search(query.Every(),limit=None)
+            print_list(results)
+
+def print_list():
+    pass
+
+def description():
+    pass
+
+def category_and_title():
+    pass
+
+def title_or_description():
     pass
 
 def date():
     pass
 
-def features_and_title():
+def delete_by_description():
     pass
+
+def title_and_date():
+    pass
+
 
 def main_window():
     root = Tk()
@@ -57,13 +77,17 @@ def main_window():
     datamenu = Menu(menu, tearoff=0)
     datamenu.add_command(label="Load", command=load)
     datamenu.add_command(label="Exit", command=root.quit)
+    datamenu.add_command(label="List", command=list_all)
     menu.add_cascade(label="Data", menu=datamenu)
 
     # SEARCH
     searchmenu = Menu(menu, tearoff=0)
-    searchmenu.add_command(label="Author", command=title_or_introduction)
-    searchmenu.add_command(label="Delete by summary", command=date)
-    searchmenu.add_command(label="Date and title", command=features_and_title)    
+    searchmenu.add_command(label="Description", command=description)
+    searchmenu.add_command(label="Category and title", command=category_and_title)
+    searchmenu.add_command(label="Tittle or description", command=title_or_description)
+    searchmenu.add_command(label="Date", command=date)
+    searchmenu.add_command(label="Delete by description", command=delete_by_description)
+    searchmenu.add_command(label="Tittle and date", command=title_and_date)
     menu.add_cascade(label="Search", menu=searchmenu)
 
     root.config(menu=menu, background='lightblue', width=500, height=400)
