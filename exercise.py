@@ -127,7 +127,31 @@ def category_and_title():
     b.pack(side=LEFT)
 
 def title_or_description():
-    pass
+    def show_list():
+        ix=open_dir("Index")   
+        with ix.searcher() as searcher:
+            s = re.compile('\d{8}').match(str(en.get()))
+            if s:
+                query = QueryParser("title", ix.schema).parse('fecha:['+ str(en.get()) +' TO] '+ str(en1.get()))
+                results = searcher.search(query,limit=None)
+                print_list(results)
+            else:
+                messagebox.showerror("ERROR", "formato de fecha incorrecto AAAAMMDD")
+    
+    v = Toplevel()
+    v.title("Search by title or description")
+    l = Label(v, text="Write phrase from title:")
+    l.pack(side=LEFT)   
+    en = Entry(v)
+    en.pack(side=LEFT)
+    
+    l1 = Label(v, text="Write words from description:")
+    l1.pack(side=LEFT)
+    en1 = Entry(v, width=75)
+    en1.pack(side=LEFT)
+    
+    b =Button(v, text="Buscar", command=show_list)
+    b.pack(side=LEFT)
 
 def date():
     pass
