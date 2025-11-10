@@ -19,15 +19,61 @@ getattr(ssl, '_create_unverified_context', None)):
 
 def read_data():
     def obtain_news_uris():
-        pass
+        uris = []
+        req=urllib.request.Request("https://www.sensacine.com/noticias/",         
+        headers={'User-Agent': 'Mozilla/5.0'}) 
+        f = urllib.request.urlopen(req) 
+        s = BeautifulSoup(f, 'lxml')
+        container = s.find("div", class_="gd-col-left")
+        
+        news_divs = container.find_all("div", class_="meta")
+        for nd in news_divs:
+            
+            not_parsed_category = nd.find("div", class_="meta-category").text.strip()
+            category = parse_category_name(not_parsed_category)
+            
+            url_div = nd.find("a", href=True)
+            link = 'https://www.sensacine.com' + url_div['href']
+            
+            description = url_div.text.strip()
+            
+            date_div = nd.find("div", class_="meta-date")
+            date_without_weekday = delete_weekday_from_date(date_div.text.strip())
+            date = parse_date(date_without_weekday)
+          
+            uris.append((category, link, description, date))
+        return uris
+
+    def parse_category_name (category_name):
+        parts = category_name.split("-")
+        if len (parts) > 1:
+            return parts[1].strip()
+        else:
+            return category_name.strip()
+    
+    def delete_weekday_from_date(date_text):
+        parts = date_text.split(",")
+        if len(parts) > 1:
+            return parts[1].strip()
+        else:
+            return date_text.strip()
+    
+    def parse_date(date):
+        months = {'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'}
+        slices = date.lower().split()
+        slices = [slices[-5], slices[-3], slices[-1]]
+        modified_date = f"{slices[0]} {months[slices[1]]} {slices[2]}"
+        return datetime.strptime(modified_date, '%d %m %Y').strftime('%d%m%Y')
 
     def obtain_news_from_uris(news_uris):
         news = list()
-        for n_uri, category, description, publish_date  in news_uris:
-            raw_data = urllib.request.urlopen(n_uri).read().decode('UTF-8')
-            soup = BeautifulSoup(raw_data, 'lxml')
-            title = soup.find('div', class_='titlebar-title titlebar-title-lg').text.strip() if soup.find('div', class_='titlebar-title titlebar-title-lg') else 'Unknown'
-            new = (category, title, n_uri, description, publish_date)
+        for category, link, description, date in news_uris:
+            req=urllib.request.Request(link,         
+            headers={'User-Agent': 'Mozilla/5.0'}) 
+            f = urllib.request.urlopen(req) 
+            s = BeautifulSoup(f, 'lxml')
+            title = s.find('div', class_='titlebar-title titlebar-title-lg').text.strip() if s.find('div', class_='titlebar-title titlebar-title-lg') else 'Unknown'
+            new = (category, title, link, description, date)
             print(new)
             news.append(new)
         return news
@@ -73,8 +119,8 @@ def print_list(cursor):
     sc.pack(side=RIGHT, fill=Y)
     lb = Listbox(v, width = 150, yscrollcommand=sc.set)
     for row in cursor:
-        lb.insert(END,row['title'])
-        lb.insert(END,"    Description: "+ row['description'])
+        lb.insert(END,"    Category: " + row['category'])
+        lb.insert(END,"    Title: "+ row['title'])
         lb.insert(END,"    Link: "+ row['link'])
         lb.insert(END,"    Date: "+ row['date'])
         lb.insert(END,"\n\n")
@@ -154,7 +200,35 @@ def title_or_description():
     b.pack(side=LEFT)
 
 def date():
-    pass
+    def parse_date(date):
+        months = {
+            'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06',
+            'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+        }
+        slices = date.lower().split()
+        slices = [s for s in slices if s != "de"]
+        day, month, year = slices[0], slices[1], slices[2]
+        formatted_date = f"{year}{months[month]}{int(day):02d}"
+        return formatted_date
+    
+    def list_films_between_dates(event):
+        ix=open_dir('Index')
+        with ix.searcher() as searcher:
+            myquery = QueryParser("title", ix.schema).parse('date:['+ parse_date(str(entry_date_1.get())) +' TO ' + parse_date(str(entry_date_2.get())) + ']')
+            results = searcher.search(myquery, limit=None)
+            print_list(results)
+
+    v = Toplevel()
+    label = Label(v, text="Search for films between dates (DD de (Nombre mes) de YYYY): ")
+    label.pack(side=LEFT)
+    
+    entry_date_1 = Entry(v)
+    entry_date_1.bind("<Return>", list_films_between_dates)
+    entry_date_1.pack(side=LEFT)
+
+    entry_date_2 = Entry(v)
+    entry_date_2.bind("<Return>", list_films_between_dates)
+    entry_date_2.pack(side=LEFT)
 
 def delete_by_description():
     def modify(event):
@@ -191,7 +265,24 @@ def delete_by_description():
     en.pack(side=LEFT)
 
 def title_and_date():
-    pass
+    def list_films_by_date_and_title(event):
+        ix=open_dir('Index')
+        with ix.searcher() as searcher:
+            myquery = QueryParser("title", ix.schema).parse('date:['+ str(entry_date.get()) +' TO ' + str(entry_date.get()) + '] '+ str(entry_title.get()))
+            results = searcher.search(myquery, limit=5)
+            print_list(results)
+
+    v = Toplevel()
+    label = Label(v, text="Search for films with that title and publish date (DDMMYYYY): ")
+    label.pack(side=LEFT)
+    
+    entry_title = Entry(v)
+    entry_title.bind("<Return>", list_films_by_date_and_title)
+    entry_title.pack(side=LEFT)
+
+    entry_date = Entry(v)
+    entry_date.bind("<Return>", list_films_by_date_and_title)
+    entry_date.pack(side=LEFT)
 
 
 def main_window():
@@ -220,4 +311,5 @@ def main_window():
     root.mainloop()
 
 if __name__ == '__main__':
-    main_window()
+    # main_window()
+    read_data()
