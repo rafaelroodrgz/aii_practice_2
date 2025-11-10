@@ -124,8 +124,8 @@ def print_list(cursor):
     sc.pack(side=RIGHT, fill=Y)
     lb = Listbox(v, width = 150, yscrollcommand=sc.set)
     for row in cursor:
-        lb.insert(END,row['title'])
-        lb.insert(END,"    Description: "+ row['description'])
+        lb.insert(END,"    Category: " + row['category'])
+        lb.insert(END,"    Title: "+ row['title'])
         lb.insert(END,"    Link: "+ row['link'])
         lb.insert(END,"    Date: "+ row['date'])
         lb.insert(END,"\n\n")
@@ -178,10 +178,62 @@ def category_and_title():
     b.pack(side=LEFT)
 
 def title_or_description():
-    pass
+    def show_list():
+        ix=open_dir("Index")   
+        with ix.searcher() as searcher:
+            s = re.compile('\d{8}').match(str(en.get()))
+            if s:
+                query = QueryParser("title", ix.schema).parse('fecha:['+ str(en.get()) +' TO] '+ str(en1.get()))
+                results = searcher.search(query,limit=None)
+                print_list(results)
+            else:
+                messagebox.showerror("ERROR", "formato de fecha incorrecto AAAAMMDD")
+    
+    v = Toplevel()
+    v.title("Search by title or description")
+    l = Label(v, text="Write phrase from title:")
+    l.pack(side=LEFT)   
+    en = Entry(v)
+    en.pack(side=LEFT)
+    
+    l1 = Label(v, text="Write words from description:")
+    l1.pack(side=LEFT)
+    en1 = Entry(v, width=75)
+    en1.pack(side=LEFT)
+    
+    b =Button(v, text="Buscar", command=show_list)
+    b.pack(side=LEFT)
 
 def date():
-    pass
+    def parse_date(date):
+        months = {
+            'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06',
+            'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+        }
+        slices = date.lower().split()
+        slices = [s for s in slices if s != "de"]
+        day, month, year = slices[0], slices[1], slices[2]
+        formatted_date = f"{year}{months[month]}{int(day):02d}"
+        return formatted_date
+    
+    def list_films_between_dates(event):
+        ix=open_dir('Index')
+        with ix.searcher() as searcher:
+            myquery = QueryParser("title", ix.schema).parse('date:['+ parse_date(str(entry_date_1.get())) +' TO ' + parse_date(str(entry_date_2.get())) + ']')
+            results = searcher.search(myquery, limit=None)
+            print_list(results)
+
+    v = Toplevel()
+    label = Label(v, text="Search for films between dates (DD de (Nombre mes) de YYYY): ")
+    label.pack(side=LEFT)
+    
+    entry_date_1 = Entry(v)
+    entry_date_1.bind("<Return>", list_films_between_dates)
+    entry_date_1.pack(side=LEFT)
+
+    entry_date_2 = Entry(v)
+    entry_date_2.bind("<Return>", list_films_between_dates)
+    entry_date_2.pack(side=LEFT)
 
 def delete_by_description():
     def modify(event):
@@ -218,7 +270,24 @@ def delete_by_description():
     en.pack(side=LEFT)
 
 def title_and_date():
-    pass
+    def list_films_by_date_and_title(event):
+        ix=open_dir('Index')
+        with ix.searcher() as searcher:
+            myquery = QueryParser("title", ix.schema).parse('date:['+ str(entry_date.get()) +' TO ' + str(entry_date.get()) + '] '+ str(entry_title.get()))
+            results = searcher.search(myquery, limit=5)
+            print_list(results)
+
+    v = Toplevel()
+    label = Label(v, text="Search for films with that title and publish date (DDMMYYYY): ")
+    label.pack(side=LEFT)
+    
+    entry_title = Entry(v)
+    entry_title.bind("<Return>", list_films_by_date_and_title)
+    entry_title.pack(side=LEFT)
+
+    entry_date = Entry(v)
+    entry_date.bind("<Return>", list_films_by_date_and_title)
+    entry_date.pack(side=LEFT)
 
 
 def main_window():
