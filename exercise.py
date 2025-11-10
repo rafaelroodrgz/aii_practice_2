@@ -99,7 +99,7 @@ def description():
     en.pack(side=LEFT)
 
 def category_and_title():
-    def mostrar_lista():    
+    def show_list():    
         with ix.searcher() as searcher:
             entrada = '"'+str(en.get())+'"'
             query = QueryParser("title", ix.schema).parse('category:'+ entrada +' '+str(en1.get()))
@@ -123,7 +123,7 @@ def category_and_title():
     en1 = Entry(v, width=75)
     en1.pack(side=LEFT)
     
-    b =Button(v, text="Search", command=mostrar_lista)
+    b =Button(v, text="Search", command=show_list)
     b.pack(side=LEFT)
 
 def title_or_description():
@@ -133,7 +133,38 @@ def date():
     pass
 
 def delete_by_description():
-    pass
+    def modify(event):
+        ix=open_dir("Index") 
+        with ix.searcher() as searcher:
+            query = QueryParser("description", ix.schema).parse(str(en.get()))
+            results = searcher.search(query, limit=None)
+            if len(results) > 0: 
+                v = Toplevel()
+                v.title("News to delete")
+                v.geometry('800x150')
+                sc = Scrollbar(v)
+                sc.pack(side=RIGHT, fill=Y)
+                lb = Listbox(v, yscrollcommand=sc.set)
+                lb.pack(side=BOTTOM, fill = BOTH)
+                sc.config(command = lb.yview)
+                for r in results:
+                    lb.insert(END,r['title'])
+                    lb.insert(END,'')
+                respuesta = messagebox.askyesno(title="Confirm",message="Are you sure that you want to delete this new?")
+                if respuesta:
+                    writer = ix.writer()
+                    writer.delete_by_query(query)
+                    writer.commit()
+            else:
+                messagebox.showinfo("WARNING", "There is no new with a description with those words")
+
+    v = Toplevel()
+    v.title("Delete news by description")
+    l = Label(v, text="Write description words:")
+    l.pack(side=LEFT)
+    en = Entry(v, width=75)
+    en.bind("<Return>", modify)
+    en.pack(side=LEFT)
 
 def title_and_date():
     pass
