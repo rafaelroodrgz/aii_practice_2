@@ -181,13 +181,24 @@ def title_or_description():
     def show_list():
         ix=open_dir("Index")   
         with ix.searcher() as searcher:
-            s = re.compile('\d{8}').match(str(en.get()))
-            if s:
-                query = QueryParser("title", ix.schema).parse('fecha:['+ str(en.get()) +' TO] '+ str(en1.get()))
-                results = searcher.search(query,limit=None)
-                print_list(results)
-            else:
-                messagebox.showerror("ERROR", "formato de fecha incorrecto AAAAMMDD")
+            title_words = str(en.get()).strip()
+            description_words = str(en1.get()).strip()
+            
+            query_parts = []
+            
+            full_query_string = f'title:({title_words}) AND description:({description_words})'
+
+            try:
+                query = QueryParser(None, ix.schema).parse(full_query_string)
+                results = searcher.search(query, limit=None)
+                
+                if (title_words and description_words):
+                    print_list(results)
+                else:
+                    messagebox.showinfo("Error", "Please enter words in both fields.")
+
+            except Exception as e:
+                messagebox.showerror("ERROR", f"Error: {e}")
     
     v = Toplevel()
     v.title("Search by title or description")
