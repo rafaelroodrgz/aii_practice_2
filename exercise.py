@@ -17,14 +17,14 @@ getattr(ssl, '_create_unverified_context', None)):
 
 
 def read_data():
-    def obtain_recipes_uris():
+    def obtain_news_uris():
         pass
 
-    def obtain_recipes_from_uris(recipes_uris):
+    def obtain_news_from_uris(news_uris):
         pass
 
-    recipes_uris = obtain_recipes_uris()
-    data = obtain_recipes_from_uris(recipes_uris)
+    news_uris = obtain_news_uris()
+    data = obtain_news_from_uris(news_uris)
     return data
 
 def load():
