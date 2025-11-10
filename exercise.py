@@ -66,7 +66,6 @@ def read_data():
         slices = date.lower().split()
         slices = [slices[-5], slices[-3], slices[-1]]
         modified_date = f"{slices[0]} {months[slices[1]]} {slices[2]}"
-        # return datetime.strptime(modified_date, '%d %m %Y').strftime('%d%m%Y')
         return datetime.strptime(modified_date, '%d %m %Y')
 
 
@@ -106,7 +105,7 @@ def load():
                             title=str(j[1]), 
                             link=str(j[2]), 
                             description=str(j[3]), 
-                            date=j[4])   
+                            date=j[4])
         i+=1
     writer.commit()
     messagebox.showinfo("End of index", "Indexed "+str(i)+ " news")   
@@ -127,7 +126,7 @@ def print_list(cursor):
         lb.insert(END,"    Category: " + row['category'])
         lb.insert(END,"    Title: "+ row['title'])
         lb.insert(END,"    Link: "+ row['link'])
-        lb.insert(END,"    Date: "+ row['date'])
+        lb.insert(END,"    Date: "+ str(row['date']))
         lb.insert(END,"\n\n")
     lb.pack(side=LEFT,fill=BOTH)
     sc.config(command = lb.yview)
@@ -317,4 +316,3 @@ def main_window():
 
 if __name__ == '__main__':
     main_window()
-    # load()
